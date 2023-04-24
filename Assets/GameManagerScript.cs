@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 public class GameManagerScript : MonoBehaviour
 {
     int[] map;
 
 
-
+    // 配列の内容を出力する処理
     void PrintfArray()
     {
         string debugText = "";
@@ -18,6 +19,7 @@ public class GameManagerScript : MonoBehaviour
         Debug.Log(debugText);
     }
 
+    // プレイヤーがどのインデックスに居るのかを返す処理
     int GetPlayerIndex()
     {
         for (int i = 0; i < map.Length; i++)
@@ -30,64 +32,70 @@ public class GameManagerScript : MonoBehaviour
         return -1;
     }
 
+    // 移動の可不可を判断して移動させる処理
+    bool MoveNumber(int number, int moveFrom, int moveTo)
+    {
+        // 移動先が範囲外なら移動不可
+        if (moveTo < 0|| moveTo >= map.Length) { return false; }
+
+        // 移動先に2(箱)が居たら
+        if (map[moveTo] == 2)
+        {
+            // どの方向へ移動するか算出
+            int velocity = moveTo - moveFrom;
+            /*
+            プレイヤーの移動先から、さらに先へ2(箱)を移動させる
+            箱の移動処理、MoveNumberメソッドないでMoveNumberメソッドを
+            呼ぶ、処理が再帰している。移動不可をでbool記録
+             */
+            bool success = MoveNumber(2, moveTo, moveTo + velocity);
+            // もし箱が移動失敗したら、プレイヤーの移動も失敗
+            if (!success) { return false; }
+        }
+        // プレイヤー、箱かかわらずの移動処理
+        map[moveTo] = number;
+        map[moveFrom] = 0;
+        return true;
+    }
+
+
     // Start is called before the first frame update
     void Start()
     {
-        map = new int[] { 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 };
+        map = new int[] { 0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 0 };
 
+        // 配列の内容を出力する
         PrintfArray();
-
-        ////追加　文字列の宣言と初期化
-        //string debugText = "";
-        //for (int i = 0; i < map.Length; i++)
-        //{
-        //    //変更　文字列に結合していく
-        //    debugText += map[i].ToString() + ",";
-        //}
-        ////結合した文字列を出力
-        //Debug.Log(debugText);
     }
 
     // Update is called once per frame
     void Update()
     {
-        //見つからなかった時のために-1で初期化
-        int playerIndex = -1;
-
-        //要素数はmap.Lengthで取得
-        for (int i = 0; i < map.Length; i++)
+        // プレイヤーの移動処理
+        // 右移動処理
+        if (Input.GetKeyDown(KeyCode.RightArrow))
         {
-            if (map[i] == 1)
-            {
-                playerIndex = i;
-                break;
-            }
-        }
+            // プレイヤーがどの位置に居るか
+            int playerIndex = GetPlayerIndex();
 
-        /*
-          playerIndex + 1 のインデックスのものと交換するので、
-          playerIndex - 1　よりさらに小さいインデックスのとき
-          のみ交換処理を行う
-         */
-       
-        if (playerIndex < map.Length + 1)
-        {
-            //右移動処理
-            if (Input.GetKeyDown(KeyCode.RightArrow))
-            {
-                map[playerIndex + 1] = 1;
-                map[playerIndex] = 0;
-            }
+            // 移動処理
+            MoveNumber(1, playerIndex, playerIndex + 1);
+
+            // 配列の内容を出力する
+            PrintfArray();
         }
 
         //左移動処理
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        if (Input.GetKeyDown(KeyCode.LeftArrow)) 
         {
-            if (playerIndex > 1)
-            {
-                map[playerIndex - 1] = 1;
-                map[playerIndex] = 0;
-            }
+            // プレイヤーがどの位置に居るか
+            int playerIndex = GetPlayerIndex();
+
+            // 移動処理
+            MoveNumber(1, playerIndex, playerIndex - 1);
+
+            // 配列の内容を出力する
+            PrintfArray();
         }
 
 
